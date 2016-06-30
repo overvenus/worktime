@@ -68,12 +68,12 @@ class MainWin(Gtk.Window):
 
         # Event
         self.connect('delete-event', self.on_hide)
-        GLib.timeout_add(1000, self.on_update)
+        self.app.connect_update(self.on_update)
 
-    def on_update(self):
-        markup = '<span font="60">{}</span>'.format(time.strftime('%H:%M:%S'))
+    def on_update(self, now):
+        ctime = time.ctime(now)
+        markup = '<span font="60">{}</span>'.format(ctime.split(' ')[-2])
         self.timer_label.set_markup(markup)
-        return True
 
     def on_show(self, w, data):
         return self.show_all()
@@ -87,17 +87,33 @@ class Worktime(Gtk.Application):
         super().__init__()
         self.name = 'Worktime'
         self.getoutput = lambda x: Popen(x, stdout=PIPE).communicate()[0]
+        self.update_func_list = []
         self.main_win = MainWin(self)
         self.conf_win = ConfigWin(self)
         self.indicator = Indicator(self)
+
+        # Update event
+        GLib.timeout_add(1000, self.on_timeout)
+        self.connect_update(self.on_update)
+
+    def connect_update(self, update_func):
+        self.update_func_list.append(update_func)
 
     def get_viewport_position(self):
         # get the position of the current workspace
         return list(int(i.strip(b',')) for i in self.getoutput(('xprop', '-root',
             '-notype', '_NET_DESKTOP_VIEWPORT', )).split()[-2:])
 
-    def run(self):
+    def on_update(self, now):
         print(self.get_viewport_position())
+
+    def on_timeout(self):
+        now = time.time()
+        for func in self.update_func_list:
+            func(now)
+        return True
+
+    def run(self):
         Gtk.main()
 
     def on_quit(self, w, data):
