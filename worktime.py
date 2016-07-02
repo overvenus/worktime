@@ -10,6 +10,9 @@ from subprocess import Popen, PIPE
 from gi.repository import Gtk, GLib
 from gi.repository import AppIndicator3 as appindicator
 
+# custom build module
+import where_
+
 
 class Indicator:
 
@@ -103,8 +106,7 @@ class MainWin(Gtk.Window):
 
     def _get_viewport_position(self):
         # get the position of the current workspace
-        return list(int(i.strip(b',')) for i in self.getoutput(('xprop', '-root',
-                                                                '-notype', '_NET_DESKTOP_VIEWPORT', )).split()[-2:])
+        return where_.cardinal()
 
     def on_start_clicked(self, widget, date=None):
         self.is_started = True
@@ -163,7 +165,6 @@ class Worktime(Gtk.Application):
         super().__init__()
         self.name = 'Worktime'
         self.update_func_list = []
-        self.session = Session()
 
         # create config dir
         config_dir = os.environ['HOME'] + '/.config/worktime'
