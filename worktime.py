@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import time
 import signal
 import yaml
@@ -115,6 +114,7 @@ class MainWin(Gtk.Window):
 
         # Init view
         self.on_update_clock(None, date=self.total_time)
+        self.on_show(None)
 
     @staticmethod
     def _get_viewport_position():
