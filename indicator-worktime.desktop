@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Exec=/opt/worktime/worktime.py
-Icon=/opt/worktime/worktime.py/icons/window.png
+Icon=/opt/worktime/icons/window.png
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
