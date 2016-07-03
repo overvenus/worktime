@@ -12,3 +12,4 @@
 [The Module’s Method Table and Initialization Function](https://docs.python.org/3.0/extending/extending.html#the-module-s-method-table-and-initialization-function)
 [Tracing Python memory leaks](http://www.lshift.net/blog/2008/11/14/tracing-python-memory-leaks/)
 [AppIndicator3.Indicator](https://lazka.github.io/pgi-docs/AppIndicator3-0.1/classes/Indicator.html#AppIndicator3.Indicator.new_with_path)
+[Python GObject Introspection API Reference](https://lazka.github.io/pgi-docs/)

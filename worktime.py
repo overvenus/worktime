@@ -8,7 +8,7 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, GdkPixbuf
 from gi.repository import AppIndicator3 as appindicator
 
 # custom build module
@@ -21,7 +21,7 @@ class Indicator:
         self.app = root
         self.ind = appindicator.Indicator.new(
             self.app.name,
-            os.path.abspath(self.app.conf_win.icons['start']),
+            self.app.conf_win.icons['stop'],
             appindicator.IndicatorCategory.APPLICATION_STATUS)
         self.ind.set_status(appindicator.IndicatorStatus.ACTIVE)
 
@@ -43,11 +43,11 @@ class Indicator:
         return menu
 
     def on_start(self, widget, data=None):
-        self.ind.set_icon(os.path.abspath(app.conf_win.icons['start']))
+        self.ind.set_icon(app.conf_win.icons['start'])
         return True
 
     def on_stop(self, widget, data=None):
-        self.ind.set_icon(os.path.abspath(app.conf_win.icons['stop']))
+        self.ind.set_icon(app.conf_win.icons['stop'])
         return True
 
 
@@ -60,6 +60,9 @@ class ConfigWin(Gtk.Window):
         self.config = None
         with open(os.path.join(config_dir, config_name)) as f:
             self.config = yaml.load(f.read())
+
+        for k in self.config['icons']:
+            self.config['icons'][k] = os.path.abspath(self.config['icons'][k])
 
     def on_show(self, widget, data=None):
         self.show_all()
@@ -89,6 +92,8 @@ class MainWin(Gtk.Window):
         super().__init__()
         self.app = root
 
+        self.set_default_icon(GdkPixbuf.Pixbuf.new_from_file(
+            self.app.conf_win.icons['window']))
         self.set_title(self.app.name)
         self.set_size_request(300, 200)
         self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
@@ -203,8 +208,8 @@ class Worktime(Gtk.Application):
         config_name = 'config.yaml'
 
         # View
-        self.main_win = MainWin(self)
         self.conf_win = ConfigWin(self, config_dir, config_name)
+        self.main_win = MainWin(self)
         self.indicator = Indicator(self)
 
         # Event
