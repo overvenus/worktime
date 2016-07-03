@@ -3,8 +3,9 @@
 
 const static char PROP_NAME[] = "_NET_DESKTOP_VIEWPORT";
 
+static Display* DUMMY_DISPLAY = NULL;
+
 void get_root_cardinal(int* x_pos, int* y_pos){
-    Display* display;
     Window window;
 
     int result;
@@ -15,16 +16,19 @@ void get_root_cardinal(int* x_pos, int* y_pos){
     unsigned char* prop_return;
     unsigned long n_items;
 
-    display = XOpenDisplay(NULL);
-    window = RootWindow(display, XDefaultScreen(display));
+    if (! DUMMY_DISPLAY) {
+        DUMMY_DISPLAY= XOpenDisplay(NULL);
+    }
+
+    window = RootWindow(DUMMY_DISPLAY, XDefaultScreen(DUMMY_DISPLAY));
 
     *x_pos = 0;
     *y_pos = 0;
 
-    property = XInternAtom(display, PROP_NAME, True);
+    property = XInternAtom(DUMMY_DISPLAY, PROP_NAME, True);
 
     result = XGetWindowProperty(
-                display, 
+                DUMMY_DISPLAY,
                 window,
                 property,
                 0,                  /* long_offset */
