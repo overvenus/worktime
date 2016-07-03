@@ -7,6 +7,6 @@ space:
 duration: 1000
 
 icons:
- start: "./icons/worktime-indicator-start.png"
- stop: "./icons/worktime-indicator-stop.png"
- window: "./icons/window.png"
+ start: "icons/worktime-indicator-start.png"
+ stop: "icons/worktime-indicator-stop.png"
+ window: "icons/window.png"

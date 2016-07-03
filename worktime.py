@@ -53,16 +53,19 @@ class Indicator:
 
 class ConfigWin(Gtk.Window):
 
-    def __init__(self, root, config_dir='./', config_name='config.yaml'):
+    def __init__(self, root, config_dir, config_name):
         super().__init__()
         self.app = root
         self.set_title(self.app.name + ' Config')
+        self.config_dir = config_dir
+        self.config_name = config_name
         self.config = None
         with open(os.path.join(config_dir, config_name)) as f:
             self.config = yaml.load(f.read())
 
         for k in self.config['icons']:
-            self.config['icons'][k] = os.path.abspath(self.config['icons'][k])
+            self.config['icons'][k] = os.path.abspath(
+                os.path.join(self.config_dir, self.config['icons'][k]))
 
     def on_show(self, widget, data=None):
         self.show_all()
@@ -204,7 +207,6 @@ class Worktime(Gtk.Application):
         config_dir = os.environ['HOME'] + '/.config/worktime'
         if not os.path.exists(config_dir):
             os.makedirs(config_dir)
-        config_dir = './'
         config_name = 'config.yaml'
 
         # View
