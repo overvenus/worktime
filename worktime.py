@@ -21,7 +21,7 @@ class Indicator:
         self.app = root
         self.ind = appindicator.Indicator.new(
             self.app.name,
-            'indicator-messages',
+            os.path.abspath(self.app.conf_win.icons['start']),
             appindicator.IndicatorCategory.APPLICATION_STATUS)
         self.ind.set_status(appindicator.IndicatorStatus.ACTIVE)
 
@@ -42,6 +42,14 @@ class Indicator:
         menu.show_all()
         return menu
 
+    def on_start(self, widget, data=None):
+        self.ind.set_icon(os.path.abspath(app.conf_win.icons['start']))
+        return True
+
+    def on_stop(self, widget, data=None):
+        self.ind.set_icon(os.path.abspath(app.conf_win.icons['stop']))
+        return True
+
 
 class ConfigWin(Gtk.Window):
 
@@ -53,7 +61,7 @@ class ConfigWin(Gtk.Window):
         with open(os.path.join(config_dir, config_name)) as f:
             self.config = yaml.load(f.read())
 
-    def on_show(self, widget, date=None):
+    def on_show(self, widget, data=None):
         self.show_all()
 
     @property
@@ -63,6 +71,10 @@ class ConfigWin(Gtk.Window):
     @property
     def space(self):
         return self.config['space']
+
+    @property
+    def icons(self):
+        return self.config['icons']
 
 
 class MainWin(Gtk.Window):
@@ -113,7 +125,7 @@ class MainWin(Gtk.Window):
         self.stop_button.connect('clicked', self.on_stop_clicked)
 
         # Init view
-        self.on_update_clock(None, date=self.total_time)
+        self.on_update_clock(None, data=self.total_time)
         self.on_show(None)
 
     @staticmethod
@@ -121,14 +133,16 @@ class MainWin(Gtk.Window):
         # get the position of the current workspace
         return where_.cardinal()
 
-    def on_start_clicked(self, widget, date=None):
+    def on_start_clicked(self, widget, data=None):
         self.is_started = True
+        self.app.indicator.on_start(widget, data)
         return True
 
-    def on_stop_clicked(self, widget, date=None):
+    def on_stop_clicked(self, widget, data=None):
         self.is_started = False
         self.total_time = 0
-        self.on_update_clock(None, date=self.total_time)
+        self.app.indicator.on_stop(widget, data)
+        self.on_update_clock(None, data=self.total_time)
         return True
 
     def get_space(self):
@@ -144,8 +158,8 @@ class MainWin(Gtk.Window):
         sec = int(total)
         return hour, mint, sec
 
-    def on_update_clock(self, widget, date=None):
-        t = self.format_time(date)
+    def on_update_clock(self, widget, data=None):
+        t = self.format_time(data)
         markup = '<span font="60">' + \
             str(t[0]) + ':' + str(t[1]) + ':' + str(t[2]) + '</span>'
         self.timer_label.set_markup(markup)
@@ -163,13 +177,13 @@ class MainWin(Gtk.Window):
         if not self.is_showed:
             return
 
-        self.on_update_clock(None, date=self.total_time)
+        self.on_update_clock(None, data=self.total_time)
 
-    def on_show(self, widget, date=None):
+    def on_show(self, widget, data=None):
         self.is_showed = True
         return self.show_all()
 
-    def on_hide(self, widget, date=None):
+    def on_hide(self, widget, data=None):
         self.is_showed = False
         return self.hide_on_delete()
 
@@ -185,12 +199,6 @@ class Worktime(Gtk.Application):
         config_dir = os.environ['HOME'] + '/.config/worktime'
         if not os.path.exists(config_dir):
             os.makedirs(config_dir)
-
-        # dump default config.json
-        config_name = 'config.json'
-        filename = os.path.join(config_dir, config_name)
-
-        # Data
         config_dir = './'
         config_name = 'config.yaml'
 

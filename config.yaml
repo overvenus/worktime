@@ -1,7 +1,11 @@
-# configures
+# work space
 space:
  - 2
  - 4
 
 # in ms
 duration: 1000
+
+icons:
+ start: "./icons/worktime-indicator-start.svg"
+ stop: "./icons/worktime-indicator-stop.svg"
