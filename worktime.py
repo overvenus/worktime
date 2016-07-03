@@ -4,9 +4,11 @@ import os
 import sys
 import time
 import signal
-import json
+import yaml
+import gi
 
-from subprocess import Popen, PIPE
+gi.require_version('Gtk', '3.0')
+
 from gi.repository import Gtk, GLib
 from gi.repository import AppIndicator3 as appindicator
 
@@ -44,13 +46,24 @@ class Indicator:
 
 class ConfigWin(Gtk.Window):
 
-    def __init__(self, root, conf=None):
+    def __init__(self, root, config_dir='./', config_name='config.yaml'):
         super().__init__()
         self.app = root
         self.set_title(self.app.name + ' Config')
+        self.config = None
+        with open(os.path.join(config_dir, config_name)) as f:
+            self.config = yaml.load(f.read())
 
     def on_show(self, widget, date=None):
         self.show_all()
+
+    @property
+    def duration(self):
+        return self.config['duration']
+
+    @property
+    def space(self):
+        return self.config['space']
 
 
 class MainWin(Gtk.Window):
@@ -74,7 +87,6 @@ class MainWin(Gtk.Window):
         self.total_time = 0
         self.is_started = False
         self.is_showed = False
-        self.getoutput = lambda x: Popen(x, stdout=PIPE).communicate()[0]
 
         # View
         self.grid = Gtk.Grid()
@@ -104,7 +116,8 @@ class MainWin(Gtk.Window):
         # Init view
         self.on_update_clock(None, date=self.total_time)
 
-    def _get_viewport_position(self):
+    @staticmethod
+    def _get_viewport_position():
         # get the position of the current workspace
         return where_.cardinal()
 
@@ -120,15 +133,16 @@ class MainWin(Gtk.Window):
 
     def get_space(self):
         pos = self._get_viewport_position()
-        return (pos[0] > 0, pos[1] > 0)
+        return pos[0] > 0, pos[1] > 0
 
-    def format_time(self, total):
+    @staticmethod
+    def format_time(total):
         hour = int(total / (60 * 60))
         total -= (hour * (60 * 60))
         mint = int(total / 60)
         total -= (mint * 60)
         sec = int(total)
-        return (hour, mint, sec)
+        return hour, mint, sec
 
     def on_update_clock(self, widget, date=None):
         t = self.format_time(date)
@@ -138,11 +152,12 @@ class MainWin(Gtk.Window):
         return True
 
     def on_update(self, now, duration):
-        if not self.get_space() == MainWin.SPACE[3]:
+        space = self.app.conf_win.space
+        if self.get_space() not in [MainWin.SPACE[i - 1] for i in space]:
             return
 
         if self.is_started:
-            duration = duration / 1000
+            duration /= 1000
             self.total_time += duration
 
         if not self.is_showed:
@@ -176,15 +191,16 @@ class Worktime(Gtk.Application):
         filename = os.path.join(config_dir, config_name)
 
         # Data
-        self.duration = 1000  # 1s = 1000ms
+        config_dir = './'
+        config_name = 'config.yaml'
 
         # View
         self.main_win = MainWin(self)
-        # self.conf_win = ConfigWin(self, config)
+        self.conf_win = ConfigWin(self, config_dir, config_name)
         self.indicator = Indicator(self)
 
         # Event
-        GLib.timeout_add(self.duration, self.on_timeout)
+        GLib.timeout_add(self.conf_win.duration, self.on_timeout)
         GLib.unix_signal_add(GLib.PRIORITY_HIGH,
                              signal.SIGINT, self.on_quit, None)
 
@@ -193,8 +209,9 @@ class Worktime(Gtk.Application):
 
     def on_timeout(self):
         now = time.time()
+        duration = self.conf_win.duration
         for func in self.update_func_list:
-            func(now, self.duration)
+            func(now, duration)
         return True
 
     def run(self):
