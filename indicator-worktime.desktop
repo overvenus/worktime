@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Exec=/opt/worktime/worktime.py
+Icon=/opt/worktime/worktime.py/icons/window.png
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=WorkTime
+Comment=Simple app to record your working time.
