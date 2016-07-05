@@ -118,9 +118,16 @@ class MainWin(Gtk.Window):
                                      valign=Gtk.Align.FILL)
         self.grid.attach(self.timer_label, 0, 0, 2, 1)
 
+        self.status_label = Gtk.Label(justify=Gtk.Justification.CENTER,
+                                      hexpand=True,
+                                      vexpand=True,
+                                      halign=Gtk.Align.FILL,
+                                      valign=Gtk.Align.FILL)
+        self.grid.attach(self.status_label, 0, 1, 2, 1)
+
         self.start_button = Gtk.Button(label='Start')
         self.grid.attach_next_to(
-            self.start_button, self.timer_label, Gtk.PositionType.BOTTOM, 1, 1)
+            self.start_button, self.status_label, Gtk.PositionType.BOTTOM, 1, 1)
 
         self.stop_button = Gtk.Button(label='Stop')
         self.grid.attach_next_to(
@@ -142,15 +149,18 @@ class MainWin(Gtk.Window):
         return where_.cardinal()
 
     def on_start_clicked(self, widget, data=None):
-        self.is_started = True
-        self.app.indicator.on_start(widget, data)
+        if not self.is_started:
+            self.is_started = True
+            self.total_time = 0
+            self.status_label.set_text("Recording")
+            self.app.indicator.on_start(widget, data)
         return True
 
     def on_stop_clicked(self, widget, data=None):
-        self.is_started = False
-        self.total_time = 0
-        self.app.indicator.on_stop(widget, data)
-        self.on_update_clock(None, data=self.total_time)
+        if self.is_started:
+            self.is_started = False
+            self.status_label.set_text("Stop")
+            self.app.indicator.on_stop(widget, data)
         return True
 
     def get_space(self):
@@ -189,6 +199,7 @@ class MainWin(Gtk.Window):
 
     def on_show(self, widget, data=None):
         self.is_showed = True
+        self.on_update_clock(None, data=self.total_time)
         return self.show_all()
 
     def on_hide(self, widget, data=None):
