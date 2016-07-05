@@ -91,6 +91,9 @@ class MainWin(Gtk.Window):
     __SPACE_4 = (True, True)
     SPACE = [__SPACE_1, __SPACE_2, __SPACE_3, __SPACE_4]
 
+    TIME_FORMATER = '<span font="50">{:02d}:{:02d}</span> <span font="40">{:02d}</span>'
+    STATUS_FOTMATER = '<span size="x-large">{}</span>'
+
     def __init__(self, root):
         super().__init__()
         self.app = root
@@ -141,6 +144,7 @@ class MainWin(Gtk.Window):
 
         # Init view
         self.on_update_clock(None, data=self.total_time)
+        self.status_label.set_markup(self.STATUS_FOTMATER.format('Stop'))
         self.on_show(None)
 
     @staticmethod
@@ -152,14 +156,15 @@ class MainWin(Gtk.Window):
         if not self.is_started:
             self.is_started = True
             self.total_time = 0
-            self.status_label.set_text("Recording")
+            self.status_label.set_markup(
+                self.STATUS_FOTMATER.format('Recording'))
             self.app.indicator.on_start(widget, data)
         return True
 
     def on_stop_clicked(self, widget, data=None):
         if self.is_started:
             self.is_started = False
-            self.status_label.set_text("Stop")
+            self.status_label.set_markup(self.STATUS_FOTMATER.format('Stop'))
             self.app.indicator.on_stop(widget, data)
         return True
 
@@ -178,8 +183,7 @@ class MainWin(Gtk.Window):
 
     def on_update_clock(self, widget, data=None):
         t = self.format_time(data)
-        markup = '<span font="60">' + \
-            str(t[0]) + ':' + str(t[1]) + ':' + str(t[2]) + '</span>'
+        markup = self.TIME_FORMATER.format(t[0], t[1], t[2])
         self.timer_label.set_markup(markup)
         return True
 
